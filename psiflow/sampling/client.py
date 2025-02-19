@@ -76,7 +76,8 @@ def main():
 
     try:
         t0 = time.time()
-        function([template] * 10)  # torch warmp-up before simulation
+        for _ in range(10):
+            function(template)  # torch warmp-up before simulation
         print("time for 10 evaluations: {}".format(time.time() - t0))
         run_driver(
             unix=True,

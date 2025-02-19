@@ -34,7 +34,7 @@ def test_einstein_crystal(dataset):
 
     nstates = 4
     geometries = dataset[:nstates].reset().geometries().result()
-    energy, forces, stress = function(geometries).values()
+    energy, forces, stress = function.compute(geometries).values()
     assert np.all(energy >= 0)
     assert energy[0] == 0
     assert np.allclose(  # forces point to centers
@@ -113,7 +113,7 @@ D1: DISTANCE ATOMS=1,2 NOPBC
 CV: BIASVALUE arg=D1
 """
     function = PlumedFunction(plumed_str)
-    outputs = function(data.geometries().result())
+    outputs = function.compute(data.geometries().result())
 
     f = 1 / (kJ / mol) * 10  # eV --> kJ/mol and nm --> A
     positions = data.get("positions").result()
@@ -134,7 +134,7 @@ CV: VOLUME
 RESTRAINT ARG=CV AT=50 KAPPA=1
 """
     function = PlumedFunction(plumed_input)
-    energy, forces, stress = function(dataset.geometries().result()).values()
+    energy, forces, stress = function.compute(dataset.geometries().result()).values()
 
     volumes = np.linalg.det(dataset.get("cell").result())
     energy_ = (volumes - 50) ** 2 * (kJ / mol) / 2
@@ -200,8 +200,8 @@ def test_harmonic_function(dataset):
     )
     einstein = EinsteinCrystalFunction(1.0, reference.per_atom.positions)
 
-    energy, forces, _ = function(dataset[:10].geometries().result()).values()
-    energy_, forces_, _ = einstein(dataset[:10].geometries().result()).values()
+    energy, forces, _ = function.compute(dataset[:10].geometries().result()).values()
+    energy_, forces_, _ = einstein.compute(dataset[:10].geometries().result()).values()
 
     assert np.allclose(energy - reference.energy, energy_)
     assert np.allclose(forces_, forces)
@@ -380,7 +380,7 @@ def test_mace_function(dataset, mace_model):
         ncores=2,
         atomic_energies={},
     )
-    output = function(dataset[:1].geometries().result())
+    output = function.compute(dataset[:1].geometries().result())
     energy = output["energy"]
 
     function = MACEFunction(
@@ -390,7 +390,7 @@ def test_mace_function(dataset, mace_model):
         ncores=4,
         atomic_energies={"Cu": 3, "H": 11},
     )
-    output = function(dataset[:1].geometries().result())
+    output = function.compute(dataset[:1].geometries().result())
     energy_ = output["energy"]
     assert np.allclose(
         energy + 11 + 3 * 3,
@@ -422,5 +422,6 @@ METAD ARG=CV PACE=1 SIGMA=3 HEIGHT=342 FILE={}
     function = function_from_json(future.filepath)
 
     energies = hamiltonian.compute(dataset, "energy").result()
-    energies_ = function(dataset.geometries().result())["energy"]
+    energies_ = function.compute(dataset.geometries().result())["energy"]
     assert np.allclose(energies, energies_)
+

@@ -72,11 +72,10 @@ class FunctionDriver:
         if self.template.periodic:
             self.template.cell[:] = cell
 
-        outputs = self.function([self.template])
-
-        energy = outputs["energy"][0]
-        forces = outputs["forces"][0]
-        stress = outputs["stress"][0]
+        outputs = self.function(self.template)
+        energy = outputs["energy"]
+        forces = outputs["forces"]
+        stress = outputs["stress"]
 
         # check for max_force
         if self.max_force is not None:
